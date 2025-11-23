@@ -38,3 +38,39 @@ void build_hamiltonian(double **H, int N, double xmin, double xmax,
             H[i][i + 1] = -inv_dx2;
     }
 }
+
+
+
+/*
+ * Resolver autovalores del Hamiltoniano con GSL.
+ * Imprime los 7  primeros autovalores (los más bajos).
+ */
+void solve_eigenvalues(double **H, int N)
+{
+    gsl_matrix *A = gsl_matrix_alloc(N, N);
+
+    // Copiar matriz dinámica H[][] a matriz GSL
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++)
+            gsl_matrix_set(A, i, j, H[i][j]);
+
+    gsl_vector *eval = gsl_vector_alloc(N);
+    gsl_eigen_symm_workspace *w = gsl_eigen_symm_alloc(N);
+
+    // Resolver autovalores
+    gsl_eigen_symm(A, eval, w);
+
+    printf("=====================================\n");
+    printf("  Autovalores (niveles de energia)\n");
+    printf("=====================================\n");
+
+    for (int i = 0; i < 7; i++)
+        printf("E%d = %lf\n", i, gsl_vector_get(eval, i));
+
+    printf("=====================================\n");
+
+    // Liberar memoria GSL
+    gsl_eigen_symm_free(w);
+    gsl_vector_free(eval);
+    gsl_matrix_free(A);
+}
