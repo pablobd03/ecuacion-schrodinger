@@ -2,7 +2,7 @@
 #include <math.h>
 #include <gsl/gsl_eigen.h>
 
-#include "solver.h"
+#include "solucionar.h"
 #include "potential.h"
 
 /*
