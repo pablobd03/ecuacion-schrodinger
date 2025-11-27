@@ -15,7 +15,7 @@
  *
  * Se utilizan unidades naturales: hbar²/(2m) = 1
  */
-void build_hamiltonian(double **H, int N, double xmin, double xmax,
+void build_hamiltonian(gsl_matrix *H, int N, double xmin, double xmax,
                        double a, double V0)
 {
     double dx = (xmax - xmin) / (N - 1);
@@ -25,17 +25,17 @@ void build_hamiltonian(double **H, int N, double xmin, double xmax,
         double x = xmin + i * dx;
 
         for (int j = 0; j < N; j++)
-            H[i][j] = 0.0;   // Inicializar fila
+            gsl_matrix_set(H, i, j, 0.0);   // Inicializar fila
 
         // Término diagonal (cinético + potencial)
-        H[i][i] = 2.0 * inv_dx2 + V(x, a, V0);
+        gsl_matrix_set(H, i, i, 2*inv_dx2 + V(x, a, V0));
 
         // Fuera de la diagonal (término cinético)
         if (i > 0)
-            H[i][i - 1] = -inv_dx2;
+             gsl_matrix_set(H, i, i-1, -inv_dx2);
 
         if (i < N - 1)
-            H[i][i + 1] = -inv_dx2;
+             gsl_matrix_set(H, i, i+1, -inv_dx2);
     }
 }
 
@@ -45,22 +45,21 @@ void build_hamiltonian(double **H, int N, double xmin, double xmax,
  * Resolver autovalores del Hamiltoniano con GSL.
  * Imprime los 7  primeros autovalores (los más bajos).
  */
-void solve_eigenpairs(double **H, int N, double *valores, double **vectores,
+void solve_eigenpairs(gsl_matrix *H, int N, gsl_vector *valores, gsl_matrix *vectores,
                       double xmin, double xmax)
 {
-    int i, j, k;
+    int i, k;
     double dx = (xmax - xmin) / (N - 1);
 
     /* Crear matriz GSL y copiar H */
     gsl_matrix *A = gsl_matrix_alloc(N, N);
-    for (i = 0; i < N; i++)
-        for (j = 0; j < N; j++)
-            gsl_matrix_set(A, i, j, H[i][j]);
+    gsl_matrix_memcpy(A, H);
 
     /* Preparar GSL para obtener eigenvalores y eigenvectores */
     gsl_vector *eval = gsl_vector_alloc(N);
     gsl_matrix *evec = gsl_matrix_alloc(N, N);
     gsl_eigen_symmv_workspace * w = gsl_eigen_symmv_alloc(N);
+
 
     /* Cálculo */
     gsl_eigen_symmv(A, eval, evec, w);
@@ -68,26 +67,26 @@ void solve_eigenpairs(double **H, int N, double *valores, double **vectores,
 
     /* Copiar autovalores */
     for (i = 0; i < N; i++)
-        valores[i] = gsl_vector_get(eval, i);
+        gsl_vector_set(valores, i, gsl_vector_get(eval, i));
 
     /* Copiar autovectores en formato matricial: guardar por filas: vectores[k][i] = componente i del autovector k */
     for (k = 0; k < N; k++) {
         /* fila k corresponde al k-ésimo autovector */
         for (i = 0; i < N; i++) {
             /* gsl_matrix_get(evec, i, k) es componente i del k-ésimo vector (columna k) */
-            vectores[k][i] = gsl_matrix_get(evec, i, k);
+            gsl_matrix_set(vectores, k, i, gsl_matrix_get(evec, i, k));
         }
 
         /* Normalizar con respecto a la integral discreta: sum_i |psi_i|^2 * dx = 1 */
         double s = 0.0;
         for (i = 0; i < N; i++)
-            s += vectores[k][i] * vectores[k][i];
+            s += gsl_matrix_get(vectores, k, i) * gsl_matrix_get(vectores, k, i);
 
         s = sqrt(s * dx); /* norma L2 en espacio continuo aproximada por sqrt(sum |psi|^2 * dx) */
 
         if (s == 0.0) continue; /* evitar división por cero */
         for (i = 0; i < N; i++)
-            vectores[k][i] /= s;
+            gsl_matrix_set(vectores, k, i, gsl_matrix_get(vectores, k, i) / s);
     }
 
     /* Imprimir primeros 5 autovalores para verificar*/
@@ -95,7 +94,7 @@ void solve_eigenpairs(double **H, int N, double *valores, double **vectores,
     printf("  Autovalores (niveles de energia)\n");
     printf("=====================================\n");
     for (i = 0; i < N && i < 5; i++)
-        printf("E%d = % .12f\n", i, valores[i]);
+        printf("E%d = % .12f\n", i, gsl_vector_get(valores, i));
     printf("=====================================\n");
 
     /* Liberar estructuras GSL */
@@ -106,7 +105,7 @@ void solve_eigenpairs(double **H, int N, double *valores, double **vectores,
 }
 
 /* Guardar la eigenfunción k en archivo con columnas: x \t psi */
-int save_eigenfunction(double **vectores, int k, int N,
+int save_eigenfunction(gsl_matrix *vectores, int k, int N,
                        double xmin, double xmax, const char *filename)
 {
     if (k < 0) return -1;
@@ -119,7 +118,7 @@ int save_eigenfunction(double **vectores, int k, int N,
 
     for (int i = 0; i < N; i++) {
         double x = xmin + i * dx;
-        fprintf(f, "% .12f\t% .12f\n", x, vectores[k][i]);
+        fprintf(f, "% .12f\t% .12f\n", x, gsl_matrix_get(vectores, k, i));
     }
 
     fclose(f);
@@ -127,17 +126,16 @@ int save_eigenfunction(double **vectores, int k, int N,
 }
 
 
-/* Guardar los eigenvalores es decir las energías*/
+/* Guardar los eigenvalores, es decir las energías*/
 
-int save_eigenvalues(double *valores, int N, const char *filename)
+int save_eigenvalues(gsl_vector *valores, int N, const char *filename)
 {
     FILE *f = fopen(filename, "w");
     if (!f) return -1;
 
     for (int k = 0; k < N; k++)
-        fprintf(f, "%d\t%.12f\n", k, valores[k]);
+        fprintf(f, "%d\t%.12f\n", k, gsl_vector_get(valores, k));
 
     fclose(f);
     return 0;
 }
-

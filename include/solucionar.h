@@ -3,6 +3,8 @@
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_eigen.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
 
 /*
  * Construye la matriz Hamiltoniana H (NxN)
@@ -14,7 +16,7 @@
  *  -V0: Valor de la grada de potencial
  */
 
-void build_hamiltonian(double **H, int N, double xmin, double xmax,
+void build_hamiltonian(gsl_matrix *H, int N, double xmin, double xmax,
                        double a, double V0);
 
 
@@ -27,7 +29,7 @@ void build_hamiltonian(double **H, int N, double xmin, double xmax,
  *    (es decir, cada fila k contiene la eigenfunción k)
  *  - xmin, xmax: dominio espacial 
  */
-void solve_eigenpairs(double **H, int N, double *valores, double **vectores,
+void solve_eigenpairs(gsl_matrix *H, int N, gsl_vector *valores, gsl_matrix *vectores,
                       double xmin, double xmax);
 
 /* Guardar autovalores en archivo:
@@ -35,7 +37,7 @@ void solve_eigenpairs(double **H, int N, double *valores, double **vectores,
  *  - filename: nombre de archivo a crear
  *  Devuelve 0 = OK, -1 = error abriendo archivo.
  */
-int save_eigenvalues(double *valores, int N, const char *filename);
+int save_eigenvalues(gsl_vector *valores, int N, const char *filename);
 
 /* Guardar la eigenfunción k (fila vectores[k]) en archivo con columnas: x \t psi
  *  - vectores: matriz con eigenfunciones por fila
@@ -44,8 +46,7 @@ int save_eigenvalues(double *valores, int N, const char *filename);
  *  - filename: nombre del archivo
  *  Devuelve 0 = OK, -1 = k fuera de rango, -2 = error abriendo archivo
  */
-int save_eigenfunction(double **vectores, int k, int N,
+int save_eigenfunction(gsl_matrix *vectores, int k, int N,
                        double xmin, double xmax, const char *filename);
 
 #endif
-
