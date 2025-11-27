@@ -20,7 +20,7 @@ int main() {
      * V0: potencial de profundidad
      * k: índice del eigenvector a guardar (k>=0 y k<N) 
      */
-    int N = 20;                   
+    int N = 500;                   
     size_t size = N;              
     double xmin = -10.0;          
     double xmax =  10.0;          
