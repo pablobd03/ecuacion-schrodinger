@@ -47,12 +47,12 @@ int main() {
     solve_eigenpairs(H, N, valores_propios, vectores_propios, xmin, xmax);
     
     /* 6. Impresión de valores propios */
-    printf("\nValores Propios:\n");
-    print_vector(valores_propios, size);
+    //printf("\nValores Propios:\n");
+    //print_vector(valores_propios, size);
 
     /* 7. Impresión de vectores propios */
-    printf("\nVectores Propios:\n");
-    print_matrix(vectores_propios, size);
+    //printf("\nVectores Propios:\n");
+    //print_matrix(vectores_propios, size);
 
     /* 8. Guardado de funciones de onda (vectores propios) k-ésima en archivo */
     // Crear carpeta "data" si no existe
@@ -71,9 +71,9 @@ int main() {
     /* 9. Guardado de niveles de energía (valores propios) propios */
     status = save_eigenvalues(valores_propios, size, "data/niveles_de_energia.txt");
     if (status == 0) {
-        printf("\nNiveles de energía guardados en 'data/niveles_de_energia.txt'\n");
+        printf("\nNiveles de energía guardados en 'data/niveles_de_energia.txt'\n\n");
     } else {
-        printf("\nError al guardar los niveles de energía (código de error: %d)\n", status);
+        printf("\nError al guardar los niveles de energía (código de error: %d)\n\n", status);
     }
     
     /* 10. Liberación de memoria */
