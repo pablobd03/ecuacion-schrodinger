@@ -1,9 +1,14 @@
 # Ecuación-Schrödinger
 El proyecto consiste en un solucionador númerico de la ecuación de Schrödinger para un pozo finito unidimensional estacionario, el cual fue desarrollado en Linux, utilizando lenguaje C. 
 
+## Requisitos
+- Linux
+- gcc
+- make
+
 ## Dependencias
 Posee las siguientes dependencias:
-- GSL (GNU Scientific Library)
+- GSL (GNU Scientific Library) (Probado con 2.7.1)
 
 ### Pasos para instalar la biblioteca de GSL
 En Ubuntu, Debian:
